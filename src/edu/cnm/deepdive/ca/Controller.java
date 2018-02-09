@@ -8,7 +8,7 @@ import javafx.scene.control.ToggleButton;
 
 public class Controller {
 
-  private static final int UPDATE_INTERVAL = 10;
+  private static final int UPDATE_INTERVAL = 1;
 
   private Model model;
   private boolean running = false;
@@ -33,13 +33,13 @@ public class Controller {
   @FXML
   private void reset() {
     model.populate(densitySlider.getValue() / 100); //scale it by 100
-    updateView();
+    updateView(model.getTerrain()); //get from model for view to display
   }
 
   @FXML
   private void runOnce() {
     model.advance();
-    updateView();
+    updateView(model.getTerrain());
   }
 
   @FXML
@@ -66,43 +66,35 @@ public class Controller {
     this.model = model;
   }
 
-  private void updateView() { //the stick for sync
-    boolean[][] terrain;
-    synchronized (model) {
-      terrain = model.getTerrain();
-      terrainView.draw(model.getTerrain());
-    }
+  private void updateView(boolean[][] terrain) {
     terrainView.draw(terrain);
     updatePending = false;
   }
 
   private class Runner extends Thread {
 
-    @Override
-    public void run() {
-      int currentGeneration;
-      while (running) {
-        synchronized (model) { //
-          model.advance();
-          currentGeneration = model.getGeneration();
-        }
-        if (!updatePending && currentGeneration % UPDATE_INTERVAL == 0) {
-          updatePending = true;
-          Platform.runLater(new Runnable() {
-            @Override
-            public void run() {
-              updateView();
-            }
-          });
-        }
-      }
+    private void refresh() {
+      boolean[][] terrain = model.getTerrain();
       updatePending = true;
-      Platform.runLater(new Runnable() {
+      Platform.runLater(new Runnable() { //does the update
         @Override
         public void run() {
-          updateView();
+          updateView(terrain);
         }
-      });
+      }); //end platform
+    }
+
+    @Override
+    public void run() {
+      while (running) {
+        synchronized (model) { //talking stick
+          model.advance();
+          if (!updatePending && model.getGeneration() % UPDATE_INTERVAL == 0) {
+            refresh();
+          }
+        }
+      }
+      refresh();
     }
   }
 }

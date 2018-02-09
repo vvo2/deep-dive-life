@@ -9,6 +9,9 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
+  public static final int SCENE_WIDTH = 800;
+  public static final int SCENE_HEIGHT = 620;
+
   @Override
   public void start(Stage primaryStage) throws Exception {
     ClassLoader loader = getClass().getClassLoader();
@@ -17,9 +20,9 @@ public class Main extends Application {
     Parent parent = fxmlLoader.load(); //inflation of fxml, parent is the root
     Controller controller = fxmlLoader.getController();
     controller.setModel(new Model());
-    Scene scene = new Scene(parent, 620, 720);
+    Scene scene = new Scene(parent, SCENE_WIDTH, SCENE_HEIGHT);
     primaryStage.setTitle(bundle.getString("windowTitle"));
-    primaryStage.setResizable(false);
+    primaryStage.setResizable(true);
     primaryStage.setScene(scene);
     primaryStage.show(); //make this appear
   }
